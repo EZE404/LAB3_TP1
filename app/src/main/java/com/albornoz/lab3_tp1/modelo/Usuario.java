@@ -1,6 +1,8 @@
 package com.albornoz.lab3_tp1.modelo;
 
-public class Usuario {
+import java.io.Serializable;
+
+public class Usuario implements Serializable {
     private long dni;
     private String nombre, apellido, mail, password;
 

@@ -1,62 +1,77 @@
 package com.albornoz.lab3_tp1.request;
 
 import android.content.Context;
-import android.content.SharedPreferences;
 import android.widget.Toast;
 
 import com.albornoz.lab3_tp1.modelo.Usuario;
 
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+
 public class ApiClient {
 
-    private static SharedPreferences sp;
+    public static void guardar(Context context, Usuario usuario) {
+        File archivo = new File(context.getFilesDir(), "datos.obj");
 
-    private static SharedPreferences conectar(Context context){
-        if(sp == null){
-            sp = context.getSharedPreferences("datos",0);
+        try {
+            //Nodo
+            FileOutputStream fo = new FileOutputStream(archivo, false);
+            BufferedOutputStream buff = new BufferedOutputStream(fo);
+            ObjectOutputStream output = new ObjectOutputStream(buff);
+            output.writeObject(usuario);
+            output.close();
+
+        } catch (FileNotFoundException ex) {
+            Toast.makeText(context.getApplicationContext(), "No se encuentra", Toast.LENGTH_LONG).show();
+        } catch (IOException io) {
+            Toast.makeText(context.getApplicationContext(), "No existe", Toast.LENGTH_LONG).show();
         }
-        return sp;
     }
 
-    public static void guardar(Context context, Usuario usuario){
-        SharedPreferences sp = conectar(context);
+    public static Usuario leer(Context context) {
+        File archivo = new File(context.getFilesDir(), "datos.obj");
+        Usuario usuario = null;
 
-        SharedPreferences.Editor editor = sp.edit();
-        editor.putLong("dni", usuario.getDni());
-        editor.putString("apellido", usuario.getApellido());
-        editor.putString("nombre", usuario.getNombre());
-        editor.putString("mail", usuario.getMail());
-        editor.putString("pass", usuario.getPassword());
-        editor.commit();
-    }
-    public static Usuario leer(Context context){
-        SharedPreferences sp = conectar(context);
+        try {
+            //Read from the stored file
+            FileInputStream is = new FileInputStream(archivo);
+            BufferedInputStream buff = new BufferedInputStream(is);
+            ObjectInputStream input = new ObjectInputStream(buff);
+            usuario = (Usuario) input.readObject();
+            input.close();
 
-        Long dni = sp.getLong("dni",-1);
-        String apellido = sp.getString("apellido","-1");
-        String nombre = sp.getString("nombre","-1");
-        String mail = sp.getString("mail","-1");
-        String pass = sp.getString("pass","-1");
+        } catch (FileNotFoundException e) {
+            Toast.makeText(context.getApplicationContext(), "No se encuentra el archivo", Toast.LENGTH_LONG).show();
+        } catch (IOException e) {
+            Toast.makeText(context.getApplicationContext(), "No existe", Toast.LENGTH_LONG).show();
+        } catch (ClassNotFoundException e) {
+            Toast.makeText(context.getApplicationContext(), "No encuentra", Toast.LENGTH_LONG).show();
+        }
 
-        Usuario usuario = new Usuario(dni, nombre, apellido, mail, pass);
         return usuario;
     }
 
-    public static Usuario login(Context context, String mail, String pass){
+    public static Usuario login(Context context, String mail, String pass) {
         Usuario usuario = null;
-        SharedPreferences sp = conectar(context);
+        Usuario usu = leer(context);
 
-        Long dni = sp.getLong("dni",-1);
-        String apellido = sp.getString("apellido","-1");
-        String nombre = sp.getString("nombre","-1");
-        String email = sp.getString("mail","-1");
-        String passw = sp.getString("pass","-1");
+        if (mail != null && pass != null && usu != null) {
+            if (mail.equals(usu.getMail()) && pass.equals(usu.getPassword())) {
+                usuario = usu;
+            }
+        }
 
-        if(mail.equals(email) && pass.equals(passw)){
-            usuario = new Usuario(dni, nombre, apellido, email, passw);
-        } else {
+        if (usuario == null) {
             Toast.makeText(context.getApplicationContext(), "Datos Invalidos", Toast.LENGTH_LONG).show();
         }
+
         return usuario;
     }
-
 }
